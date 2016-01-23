@@ -3,7 +3,7 @@
 
 // Servo position for Up and Down 
 const int penZUp = 160;
-const int penZDown = 114;
+const int penZDown = 120;
 
 const int penServoPin = 3;
 
@@ -97,32 +97,30 @@ void setup() {
   Serial.println(" mm."); 
 }
 
-/**********************
- * void loop() - Main loop
- ***********************/
+String command = "";
+String lines[90];
+int commandCount = 0;
+
 void loop() 
 {
-  String lines[64];
-  int index = 0;
-  int lineCount = 0;
+  while(Serial.available() > 0) {
+    char received = Serial.read();
+    command += received;
 
-  while(1) {
-    if(Serial.available() > 30) {
-      inputLine = Serial.readStringUntil('\n');
-      lines[index++] = inputLine;
-      lineCount++;
-    } else {
-      if (index > 0) {
-        for(int i = 0; i < lineCount; ++i) {
-          char buffer[64];
-          lines[i].toCharArray(buffer, 64);
-          Serial.print("Processed: ");
-          Serial.println(buffer);
-          /* processIncomingLine(buffer, lines[i].length()); */
-        }
+    if (received == '\n') {
+      command[command.length()-1] = '\0';
+      lines[commandCount++] = command;
+      Serial.print("Stored " + lines[commandCount-1] + "\r\n");
+      command = "";
+    }
+
+    if (received == '#') {
+      for (int i = 0; i < commandCount; ++i) {
+        char buff[lines[i].length()];
+        lines[i].toCharArray(buff, lines[i].length());
+        /* processIncomingLine(buff, lines[i].length()); */
       }
-      index = 0;
-      lineCount = 0;
+      commandCount = 0;
     }
   }
 }
